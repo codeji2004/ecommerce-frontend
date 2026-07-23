@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسوق | لوحة الإدارة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="admin-page">
+    <header>
+        <a class="brand" href="index.html">تسوق<span>.</span></a>
+        <nav>
+            <a href="index.html">عرض المتجر</a>
+        </nav>
+        <span class="live"><i></i> تحديثات مباشرة</span>
+    </header>
+
+    <main class="admin-main">
+        <div class="admin-title">
+            <div>
+                <p class="eyebrow">مرحبًا بك</p>
+                <h1>لوحة <em>الإدارة</em></h1>
+            </div>
+            <div class="admin-actions">
+                <div class="stat">
+                    <span>إجمالي الطلبات</span>
+                    <strong id="orders-count">0</strong>
+                </div>
+                <button id="logout-button" class="logout-button">تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <section class="orders-card">
+            <div class="orders-heading">
+                <h2>الطلبات الحديثة</h2>
+                <span id="connection-status">جارٍ الاتصال…</span>
+            </div>
+            <div id="orders-list" class="orders-list">
+                <p class="empty">لا توجد طلبات بعد.</p>
+            </div>
+        </section>
+
+        <section class="products-admin">
+            <div class="orders-heading">
+                <h2>إدارة المنتجات</h2>
+                <span id="product-status">المنتجات الحالية</span>
+            </div>
+
+            <div id="admin-products" class="admin-products">
+                <p class="empty">جارٍ تحميل المنتجات…</p>
+            </div>
+
+            <form id="product-form" class="product-form">
+                <input type="hidden" name="id">
+
+                <label>اسم المنتج
+                    <input required name="name" placeholder="مثال: ساعة كلاسيكية">
+                </label>
+
+                <label>السعر (د.ج)
+                    <input required name="price" type="number" min="1" placeholder="8500">
+                </label>
+
+                <label>القسم
+                    <input required name="category" placeholder="إكسسوارات">
+                </label>
+
+                <label class="file-upload">صورة المنتج من جهازك
+                    <input name="image" type="file" accept="image/*">
+                    <small>PNG أو JPG — الحد الأقصى 5 ميغابايت</small>
+                </label>
+
+                <label class="wide">الوصف
+                    <textarea name="description" placeholder="وصف مختصر للمنتج"></textarea>
+                </label>
+
+                <div class="product-form-actions">
+                    <button class="primary-button" type="submit">
+                        <span id="product-submit-label">إضافة المنتج</span>
+                    </button>
+                    <button class="cancel-edit" type="button" id="cancel-edit">إلغاء التعديل</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

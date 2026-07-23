@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل المنتج | تسوق</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="single-product-page">
+    <div class="announcement"><span>✦</span> الدفع عند الاستلام - توصيل لجميع الولايات</div>
+    
+    <header>
+        <a class="brand" href="index.html">تسوق<span>.</span></a>
+        <nav>
+            <a href="index.html">← العودة للمتجر</a>
+        </nav>
+    </header>
+
+    <main class="single-product-main">
+        <div id="loading-state" class="loading-state">
+            <p>جارٍ تحميل تفاصيل المنتج…</p>
+        </div>
+
+        <div id="error-state" class="error-state" style="display: none;">
+            <h2>عفواً، هذا المنتج غير موجود أو تم حذفه.</h2>
+            <a href="index.html" class="primary-button">تصفح باقي المنتجات <span>←</span></a>
+        </div>
+
+        <div id="product-content" class="single-product-card" style="display: none;">
+            <div class="product-gallery">
+                <img id="product-img" src="" alt="صورة المنتج">
+                <div class="gallery-badges">
+                    <span>✓ منتج أصلي</span>
+                    <span>✓ ضمان الجودة</span>
+                </div>
+            </div>
+
+            <div class="product-details">
+                <small id="product-category" class="eyebrow">القسم</small>
+                <h1 id="product-title">اسم المنتج</h1>
+                <div class="price-box">
+                    <strong id="product-price">0 د.ج</strong>
+                    <span class="cod-badge">الدفع عند الاستلام</span>
+                </div>
+
+                <div class="product-description">
+                    <h3>وصف المنتج</h3>
+                    <p id="product-desc">وصف تفصيلي للمنتج يظهر هنا...</p>
+                </div>
+
+                <div class="order-box">
+                    <h3>أدخل بياناتك لطلب المنتج الآن</h3>
+                    <form id="direct-order-form">
+                        <label>الاسم الكامل
+                            <input required name="name" placeholder="اكتب اسمك الكامل">
+                        </label>
+                        <label>رقم الهاتف
+                            <input required name="phone" type="tel" placeholder="مثال: 0550 000 000">
+                        </label>
+                        <label>العنوان الكامل (الولاية والبلدية)
+                            <textarea required name="address" placeholder="اكتب عنوانك بالتفصيل لتسهيل التوصيل"></textarea>
+                        </label>
+
+                        <button type="submit" class="primary-button full">
+                            تأكيد الطلب الآن <span>←</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <a class="brand" href="index.html">تسوق<span>.</span></a>
+        <p>اختيارات بسيطة، لأيام أجمل.</p>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="product.js"></script>
+</body>
+
+</html>
