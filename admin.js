@@ -1,5 +1,7 @@
 const money = n => `${Number(n).toLocaleString('ar-DZ')} د.ج`;
 const API_BASE = 'https://ecommerce-backend-noia.onrender.com';
+const TOKEN_KEY = 'adminToken';
+const token = localStorage.getItem(TOKEN_KEY);
 const ordersList = document.querySelector('#orders-list');
 const ordersCount = document.querySelector('#orders-count');
 const productList = document.querySelector('#admin-products');
@@ -7,8 +9,50 @@ const productForm = document.querySelector('#product-form');
 const statusMessage = document.querySelector('#product-status');
 let orders = [];
 let products = [];
+let redirectingToLogin = false;
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+
+function redirectToLogin() {
+  if (redirectingToLogin) return;
+  redirectingToLogin = true;
+  localStorage.removeItem(TOKEN_KEY);
+  window.location.replace('/admin-login.html');
+}
+
+async function adminFetch(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...options.headers
+    }
+  });
+
+  if (response.status === 401) {
+    redirectToLogin();
+    return null;
+  }
+
+  return response;
+}
+
+async function verifySession() {
+  if (!token) {
+    redirectToLogin();
+    return false;
+  }
+
+  try {
+    const response = await adminFetch('/api/auth/me', {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return Boolean(response?.ok);
+  } catch (_) {
+    statusMessage.textContent = 'Unable to verify the admin session. Check your connection and try again.';
+    return false;
+  }
+}
 
 function renderOrders() {
   ordersCount.textContent = orders.length.toLocaleString('ar-DZ');
@@ -48,27 +92,56 @@ function renderProducts() {
 }
 
 async function loadProducts() {
-  const response = await fetch(`${API_BASE}/api/admin/products`);
-  if (response.status === 401) return (window.location.href = '/admin-login.html');
+  const response = await adminFetch('/api/admin/products', {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!response) return;
   products = await response.json();
-  if (!products.length) products = await fetch(`${API_BASE}/api/products`).then(result => result.json());
+  if (!products.length) {
+    const fallbackResponse = await adminFetch('/api/products', {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!fallbackResponse) return;
+    products = await fallbackResponse.json();
+  }
   renderProducts();
 }
 
-fetch(`${API_BASE}/api/orders`).then(response => { if (response.status === 401) return (window.location.href = '/admin-login.html'); return response.json(); }).then(data => { if (Array.isArray(data)) { orders = data; renderOrders(); } });
-loadProducts();
+async function loadOrders() {
+  const response = await adminFetch('/api/orders', {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!response) return;
+  const data = await response.json();
+  if (Array.isArray(data)) {
+    orders = data;
+    renderOrders();
+  }
+}
 
-const socket = io(API_BASE);
+const socket = io('https://ecommerce-backend-noia.onrender.com', {
+  autoConnect: false,
+  auth: { token }
+});
 socket.on('connect', () => document.querySelector('#connection-status').textContent = 'متصل الآن');
 socket.on('connect_error', () => { document.querySelector('#connection-status').textContent = 'جارٍ إعادة الاتصال…'; });
 socket.on('new-order', order => { orders.unshift(order); renderOrders(); document.querySelector('#connection-status').textContent = 'وصل طلب جديد للتو!'; });
+
+async function initializeAdmin() {
+  if (!await verifySession()) return;
+  await Promise.all([loadProducts(), loadOrders()]);
+  if (!redirectingToLogin) socket.connect();
+}
+
+initializeAdmin();
 
 productForm.addEventListener('submit', async event => {
   event.preventDefault();
   const formData = new FormData(productForm);
   const id = formData.get('id');
   formData.delete('id');
-  const response = await fetch(id ? `${API_BASE}/api/admin/products/${id}` : `${API_BASE}/api/admin/products`, { method: id ? 'PUT' : 'POST', body: formData });
+  const response = await adminFetch(id ? `/api/admin/products/${id}` : '/api/admin/products', { method: id ? 'PUT' : 'POST', body: formData });
+  if (!response) return;
   const result = await response.json();
   if (!response.ok) return (statusMessage.textContent = result.message || 'تعذر حفظ المنتج.');
   statusMessage.textContent = id ? 'تم تعديل المنتج.' : 'تمت إضافة المنتج.';
@@ -103,7 +176,11 @@ document.querySelector('#admin-products').addEventListener('click', async event 
     document.querySelector('#cancel-edit').style.display = 'inline-flex';
     productForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } else if (confirm(`هل تريد حذف «${product.name}»؟`)) {
-    const response = await fetch(`${API_BASE}/api/admin/products/${product._id}`, { method: 'DELETE' });
+    const response = await adminFetch(`/api/admin/products/${product._id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response) return;
     if (response.ok) { statusMessage.textContent = 'تم حذف المنتج.'; await loadProducts(); }
   }
 });
@@ -113,11 +190,12 @@ document.querySelector('#orders-list').addEventListener('change', async event =>
   if (!select) return;
   const orderId = select.dataset.orderStatus;
   const status = select.value;
-  const response = await fetch(`${API_BASE}/api/admin/orders/${orderId}/status`, {
+  const response = await adminFetch(`/api/admin/orders/${orderId}/status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
   });
+  if (!response) return;
   if (response.ok) {
     const updated = orders.find(o => String(o._id) === String(orderId));
     if (updated) updated.status = status;
@@ -130,7 +208,11 @@ document.querySelector('#orders-list').addEventListener('click', async event => 
   if (!btn) return;
   const orderId = btn.dataset.deleteOrder;
   if (confirm('هل أنت تأكد من حذف هذا الطلب؟')) {
-    const response = await fetch(`${API_BASE}/api/admin/orders/${orderId}`, { method: 'DELETE' });
+    const response = await adminFetch(`/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response) return;
     if (response.ok) {
       orders = orders.filter(o => String(o._id) !== String(orderId));
       renderOrders();
@@ -139,4 +221,8 @@ document.querySelector('#orders-list').addEventListener('click', async event => 
 });
 
 document.querySelector('#cancel-edit').addEventListener('click', () => { productForm.reset(); productForm.elements.id.value = ''; document.querySelector('#product-submit-label').textContent = 'إضافة المنتج'; document.querySelector('#cancel-edit').style.display = 'none'; });
-document.querySelector('#logout-button').addEventListener('click', async () => { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST' }); window.location.href = '/admin-login.html'; });
+document.querySelector('#logout-button').addEventListener('click', async () => {
+  await adminFetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+  localStorage.removeItem(TOKEN_KEY);
+  window.location.href = '/admin-login.html';
+});

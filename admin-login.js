@@ -1,4 +1,5 @@
 const API_BASE = 'https://ecommerce-backend-noia.onrender.com';
+const TOKEN_KEY = 'adminToken';
 const form = document.querySelector('#login-form');
 const error = document.querySelector('#login-error');
 form.addEventListener('submit', async event => {
@@ -8,5 +9,7 @@ form.addEventListener('submit', async event => {
   const response = await fetch(`${API_BASE}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   const result = await response.json();
   if (!response.ok) return (error.textContent = result.message || 'تعذر تسجيل الدخول.');
+  if (!result.token) return (error.textContent = 'Unable to confirm the admin session. Please try again.');
+  localStorage.setItem(TOKEN_KEY, result.token);
   window.location.href = '/admin.html';
 });
