@@ -1,5 +1,5 @@
 const money = n => `${Number(n).toLocaleString('ar-DZ')} د.ج`;
-const API_BASE = 'https://ecommerce-backend-noia.onrender.com';
+const API_BASE = 'https://ecommerce-backend-1-kf21.onrender.com';
 const TOKEN_KEY = 'adminToken';
 const token = localStorage.getItem(TOKEN_KEY);
 const ordersList = document.querySelector('#orders-list');
@@ -7,9 +7,13 @@ const ordersCount = document.querySelector('#orders-count');
 const productList = document.querySelector('#admin-products');
 const productForm = document.querySelector('#product-form');
 const statusMessage = document.querySelector('#product-status');
+const adminManagement = document.querySelector('#admin-management');
+const createAdminForm = document.querySelector('#create-admin-form');
+const adminCreationStatus = document.querySelector('#admin-creation-status');
 let orders = [];
 let products = [];
 let redirectingToLogin = false;
+let currentAdmin = null;
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
 
@@ -47,7 +51,9 @@ async function verifySession() {
     const response = await adminFetch('/api/auth/me', {
       headers: { 'Content-Type': 'application/json' }
     });
-    return Boolean(response?.ok);
+    if (!response?.ok) return false;
+    currentAdmin = await response.json();
+    return true;
   } catch (_) {
     statusMessage.textContent = 'Unable to verify the admin session. Check your connection and try again.';
     return false;
@@ -97,13 +103,6 @@ async function loadProducts() {
   });
   if (!response) return;
   products = await response.json();
-  if (!products.length) {
-    const fallbackResponse = await adminFetch('/api/products', {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!fallbackResponse) return;
-    products = await fallbackResponse.json();
-  }
   renderProducts();
 }
 
@@ -119,7 +118,7 @@ async function loadOrders() {
   }
 }
 
-const socket = io('https://ecommerce-backend-noia.onrender.com', {
+const socket = io('https://ecommerce-backend-1-kf21.onrender.com', {
   autoConnect: false,
   auth: { token }
 });
@@ -129,11 +128,30 @@ socket.on('new-order', order => { orders.unshift(order); renderOrders(); documen
 
 async function initializeAdmin() {
   if (!await verifySession()) return;
+  if (currentAdmin?.role === 'superadmin') adminManagement.hidden = false;
   await Promise.all([loadProducts(), loadOrders()]);
   if (!redirectingToLogin) socket.connect();
 }
 
 initializeAdmin();
+
+createAdminForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(createAdminForm));
+  const response = await adminFetch('/api/admin/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!response) return;
+  const result = await response.json();
+  if (!response.ok) {
+    adminCreationStatus.textContent = result.message || 'تعذر إنشاء المسؤول.';
+    return;
+  }
+  createAdminForm.reset();
+  adminCreationStatus.textContent = `تم إنشاء حساب ${result.email} بنجاح.`;
+});
 
 productForm.addEventListener('submit', async event => {
   event.preventDefault();

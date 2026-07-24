@@ -1,6 +1,6 @@
 const state = { products: [], active: 'الكل', selected: null };
 const money = n => `${Number(n).toLocaleString('ar-DZ')} د.ج`;
-const API_BASE = 'https://ecommerce-backend-noia.onrender.com';
+const API_BASE = 'https://ecommerce-backend-1-kf21.onrender.com';
 const $ = selector => document.querySelector(selector);
 
 async function loadProducts() {

@@ -37,6 +37,24 @@
             </div>
         </div>
 
+        <section id="admin-management" class="products-admin" hidden>
+            <div class="orders-heading">
+                <h2>إضافة مسؤول جديد</h2>
+                <span id="admin-creation-status">أنشئ بيانات دخول مستقلة للمسؤول.</span>
+            </div>
+            <form id="create-admin-form" class="product-form">
+                <label>البريد الإلكتروني
+                    <input required name="email" type="email" autocomplete="email" placeholder="admin@example.com">
+                </label>
+                <label>كلمة المرور
+                    <input required name="password" type="password" minlength="8" autocomplete="new-password" placeholder="8 أحرف على الأقل">
+                </label>
+                <div class="product-form-actions">
+                    <button class="primary-button" type="submit">إنشاء المسؤول</button>
+                </div>
+            </form>
+        </section>
+
         <section class="orders-card">
             <div class="orders-heading">
                 <h2>الطلبات الحديثة</h2>

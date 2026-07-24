@@ -1,4 +1,4 @@
-const API_BASE = 'https://ecommerce-backend-noia.onrender.com';
+const API_BASE = 'https://ecommerce-backend-1-kf21.onrender.com';
 const TOKEN_KEY = 'adminToken';
 const form = document.querySelector('#login-form');
 const error = document.querySelector('#login-error');
